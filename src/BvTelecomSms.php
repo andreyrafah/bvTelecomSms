@@ -10,6 +10,7 @@ class BvTelecomSms
      * @var array
      */
     const DDD_NOT_IN_USE = [20, 23, 25, 26, 29, 30, 36, 39, 52, 57, 58, 59, 60, 78, 80, 90];
+
     /**
      * @var string
      */
@@ -63,14 +64,14 @@ class BvTelecomSms
             'base_uri' => config('bvtelecomsms.base_uri'),
             'headers' => [
                 'ApiKey' => config('bvtelecomsms.api-key'),
-            ]
+            ],
         ]);
 
         $response = $guzzle->post('/webhook/api/delivery/single-sms', [
             'json' => [
                 'celular' => $this->phone,
                 'mensagem' => $this->message,
-            ]
+            ],
         ]);
 
         return json_decode($response->getBody()->getContents(), true);

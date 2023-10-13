@@ -4,7 +4,6 @@ namespace Andreyrafah\BvTelecomSms;
 
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Andreyrafah\BvTelecomSms\Commands\BvTelecomSmsCommand;
 
 class BvTelecomSmsServiceProvider extends PackageServiceProvider
 {
