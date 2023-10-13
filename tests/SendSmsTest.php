@@ -16,6 +16,6 @@ it('test size 12 number should throw a exception', function () {
 
 it('test ddd invalid should throw a exception', function () {
     $bvTelecomSms = new \Andreyrafah\BvTelecomSms\BvTelecomSms();
-    $bvTelecomSms->send('20345678901','teste');
+    $bvTelecomSms->send('20345678901', 'teste');
 
 })->throws(InvalidNumberException::class, 'DDD Invalid');

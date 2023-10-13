@@ -2,9 +2,9 @@
 
 namespace Andreyrafah\BvTelecomSms\Tests;
 
+use Andreyrafah\BvTelecomSms\BvTelecomSmsServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Andreyrafah\BvTelecomSms\BvTelecomSmsServiceProvider;
 
 class TestCase extends Orchestra
 {
