@@ -17,6 +17,6 @@ class BvTelecomSmsServiceProvider extends PackageServiceProvider
         $package
             ->name('bvtelecomsms')
             ->hasConfigFile()
-            ->hasMigration('create_bvtelecomsms_table');
+            ->hasMigration('create_sms_table');
     }
 }
