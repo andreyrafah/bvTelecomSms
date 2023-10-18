@@ -2,6 +2,7 @@
 
 namespace Andreyrafah\BvTelecomSms;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,8 @@ class BvTelecomSms
      * @var array
      */
     const DDD_NOT_IN_USE = [20, 23, 25, 26, 29, 30, 36, 39, 52, 57, 58, 59, 60, 78, 80, 90];
+
+    const SUCCESS_MESSAGE = 'Message sent successfully';
 
     private string $phone;
 
@@ -39,26 +42,31 @@ class BvTelecomSms
 
     public function updateDb(): void
     {
+        $status = $this->handleStatus();
+        $this->queryUpdate($status);
+    }
+
+    private function handleStatus(): string
+    {
         if (array_key_exists('status', $this->response) && $this->response['status'] == 'error') {
-            DB::table('sms_sent')->upsert([
-                'id' => $this->idMessageOnDb,
-                'status' => 'failed',
-            ], ['id']);
-
-            return;
+            return 'failed';
         }
 
-        if (array_key_exists('message', $this->response)) {
-            $status = 'unknown';
-            if ($this->response['message'] == 'Message sent successfully') {
-                $status = 'sent';
-            }
+        if (array_key_exists('message', $this->response) && $this->response['message'] == self::SUCCESS_MESSAGE) {
+            return 'sent';
+        }
 
-            DB::table('sms_sent')->upsert([
-                'id' => $this->idMessageOnDb,
+        return 'unknown';
+    }
+
+    private function queryUpdate($status): void
+    {
+        DB::table('sms_sent')
+            ->where('id', $this->idMessageOnDb)
+            ->update([
                 'status' => $status,
-            ], ['id']);
-        }
+                'updated_at' => Carbon::now(),
+            ]);
     }
 
     public function saveOnDb(): void
@@ -67,7 +75,14 @@ class BvTelecomSms
             'phone' => $this->phone,
             'message' => $this->message,
             'status' => 'pending',
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
         ]);
+    }
+
+    private function save()
+    {
+
     }
 
     /**
