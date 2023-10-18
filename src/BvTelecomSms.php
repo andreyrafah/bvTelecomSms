@@ -3,6 +3,8 @@
 namespace Andreyrafah\BvTelecomSms;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Support\Facades\DB;
 
 class BvTelecomSms
 {
@@ -11,15 +13,13 @@ class BvTelecomSms
      */
     const DDD_NOT_IN_USE = [20, 23, 25, 26, 29, 30, 36, 39, 52, 57, 58, 59, 60, 78, 80, 90];
 
-    /**
-     * @var string
-     */
-    private $phone;
+    private string $phone;
 
-    /**
-     * @var string
-     */
-    private $message;
+    private string $message;
+
+    private array $response;
+
+    private int $idMessageOnDb;
 
     /**
      * @throws InvalidNumberException
@@ -30,12 +30,47 @@ class BvTelecomSms
         $this->message = $message;
 
         $this->validatePhone();
+        $this->saveOnDb();
+        $this->fetch();
+        $this->updateDb();
 
-        return $this->fetch();
+        return $this->response;
+    }
+
+    public function updateDb(): void
+    {
+        if (key_exists('status', $this->response) && $this->response['status'] == 'error') {
+            DB::table('sms_sent')->upsert([
+                'id' => $this->idMessageOnDb,
+                'status' => 'failed',
+            ], ['id']);
+            return;
+        }
+
+        if (key_exists('message', $this->response)) {
+            $status = 'unknown';
+            if ($this->response['message'] == 'Message sent successfully') {
+                $status = 'sent';
+            }
+
+            DB::table('sms_sent')->upsert([
+                'id' => $this->idMessageOnDb,
+                'status' => $status,
+            ], ['id']);
+        }
+    }
+
+    public function saveOnDb(): void
+    {
+        $this->idMessageOnDb = DB::table('sms_sent')->insertGetId([
+            'phone' => $this->phone,
+            'message' => $this->message,
+            'status' => 'pending',
+        ]);
     }
 
     /**
-     * @throws \Exception
+     * @throws InvalidNumberException
      */
     public function validatePhone(): void
     {
@@ -43,13 +78,19 @@ class BvTelecomSms
         $this->validateDdd();
     }
 
-    private function validateLength()
+    /**
+     * @throws InvalidNumberException
+     */
+    private function validateLength(): void
     {
         if (strlen($this->phone) != 11) {
             throw new InvalidNumberException('The size has to be 11 characters');
         }
     }
 
+    /**
+     * @throws InvalidNumberException
+     */
     private function validateDdd(): void
     {
         $ddd = substr($this->phone, 0, 2);
@@ -58,7 +99,7 @@ class BvTelecomSms
         }
     }
 
-    public function fetch(): array
+    public function fetch(): void
     {
         $guzzle = new Client([
             'base_uri' => config('bvtelecomsms.base_uri'),
@@ -67,13 +108,18 @@ class BvTelecomSms
             ],
         ]);
 
-        $response = $guzzle->post('/webhook/api/delivery/single-sms', [
-            'json' => [
-                'celular' => $this->phone,
-                'mensagem' => $this->message,
-            ],
-        ]);
+        try {
+            $response = $guzzle->post('/webhook/api/delivery/single-sms', [
+                'json' => [
+                    'celular' => $this->phone,
+                    'mensagem' => $this->message,
+                ],
+            ]);
+        } catch (GuzzleException $e) {
+            $this->response = ['status' => 'error', 'message' => $e->getMessage()];
+            return;
+        }
 
-        return json_decode($response->getBody()->getContents(), true);
+        $this->response = json_decode($response->getBody()->getContents(), true);
     }
 }
