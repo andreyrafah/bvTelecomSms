@@ -39,15 +39,16 @@ class BvTelecomSms
 
     public function updateDb(): void
     {
-        if (key_exists('status', $this->response) && $this->response['status'] == 'error') {
+        if (array_key_exists('status', $this->response) && $this->response['status'] == 'error') {
             DB::table('sms_sent')->upsert([
                 'id' => $this->idMessageOnDb,
                 'status' => 'failed',
             ], ['id']);
+
             return;
         }
 
-        if (key_exists('message', $this->response)) {
+        if (array_key_exists('message', $this->response)) {
             $status = 'unknown';
             if ($this->response['message'] == 'Message sent successfully') {
                 $status = 'sent';
@@ -117,6 +118,7 @@ class BvTelecomSms
             ]);
         } catch (GuzzleException $e) {
             $this->response = ['status' => 'error', 'message' => $e->getMessage()];
+
             return;
         }
 
