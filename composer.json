@@ -1,6 +1,6 @@
 {
     "name": "andreyrafah/bvtelecomsms",
-    "description": "use to send SMS by Bv Telecom",
+    "description": "Use to send SMS by Bv Telecom",
     "keywords": [
         "andreyrafah",
         "laravel",
@@ -11,7 +11,7 @@
     "authors": [
         {
             "name": "Andrey Rafah",
-            "email": "andreyrafah@hotmail.com",
+            "email": "andrey_rafah@hotmail.com",
             "role": "Developer"
         }
     ],
